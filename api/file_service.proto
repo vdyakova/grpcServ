@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package file_service;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+
+service FileServ{
+  rpc UploadFile(stream FileChunk) returns (FileUploadResponse);
+  rpc ListFile(google.protobuf.Empty) returns (FileListResponse);
+  rpc DownloadFile(FileRequest) returns (stream FileChunk);
+}
+
+message FileUploadResponse {
+  string message = 1;
+}
+
+message FileChunk {
+  string filename = 1;
+  bytes content = 2;
+}
+
+message FileListResponse{
+  repeated FileMetadata files=1;
+}
+
+message FileRequest {
+  string filename = 1;
+}
+
+message FileMetadata {
+  string name = 1;
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}
