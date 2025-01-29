@@ -62,7 +62,7 @@ func (r *repo) ListFile(ctx context.Context) ([]*model.File, error) {
 	})
 
 	if err != nil {
-		log.Printf("Ошибка при сканировании директории: %v", err)
+		log.Printf("Error with skanning dir: %v", err)
 		return []*model.File{}, fmt.Errorf("Sorry")
 	}
 
