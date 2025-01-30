@@ -28,7 +28,11 @@ func (r *repo) UploadFile(ctx context.Context, file *model.FileChunk) (*model.Me
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
-
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("upload canceled: %w", ctx.Err())
+	default:
+	}
 	f, err := os.Create(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create file: %w", err)
@@ -43,8 +47,17 @@ func (r *repo) UploadFile(ctx context.Context, file *model.FileChunk) (*model.Me
 }
 func (r *repo) ListFile(ctx context.Context) ([]*model.File, error) {
 	var files []*model.File
-
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("upload canceled: %w", ctx.Err())
+	default:
+	}
 	err := filepath.Walk(r.uploadDir, func(path string, info os.FileInfo, err error) error {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("listfile canceled: %w", ctx.Err())
+		default:
+		}
 		if err != nil {
 			return err
 		}
@@ -77,7 +90,11 @@ func (r *repo) DownloadFile(ctx context.Context, fileName string) ([]*model.File
 	filePath := filepath.Join(r.uploadDir, fileName)
 	r.mu.Lock()
 	defer r.mu.Unlock()
-
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("upload canceled: %w", ctx.Err())
+	default:
+	}
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
@@ -86,9 +103,13 @@ func (r *repo) DownloadFile(ctx context.Context, fileName string) ([]*model.File
 
 	const chunkSize = 1024
 	var fileChunks []*model.FileChunk
-
 	buffer := make([]byte, chunkSize)
 	for {
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("download canceled: %w", ctx.Err())
+		default:
+		}
 		n, err := f.Read(buffer)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
